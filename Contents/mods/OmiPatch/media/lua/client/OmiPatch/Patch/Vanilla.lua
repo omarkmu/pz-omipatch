@@ -6,12 +6,18 @@ local OmiPatch = require 'OmiPatch'
 OmiPatch.registerPatch {
     name = 'Vanilla_NoAdminPowersOnStart',
     onCreatePlayer = function(_, player)
-        if player:getAccessLevel() == '' then
+        if player:getAccessLevel() == 'None' then
             return
         end
 
         player:setInvisible(false)
-        player:setGodMod(false)
         player:setGhostMode(false)
+    end,
+    onFirstPlayerUpdate = function(_, player)
+        if player:getAccessLevel() == 'None' then
+            return
+        end
+
+        player:setGodMod(false)
     end,
 }

@@ -8,9 +8,18 @@ OmiPatch.patches = {}
 
 ---@class omi.Patch
 ---@field name string The unique name of the patch.
----@field dependencies string[]? A list of mod dependency IDs.
----@field onCreatePlayer fun(self: omi.Patch, player: IsoPlayer, index: integer)? The patch function to run on player spawn, if the patch is enabled.
----@field onGameStart fun(self: omi.Patch)? The patch function to run on game start, if the patch is enabled.
+---@field dependencies string[]? List of mod dependency IDs.
+---@field onCreatePlayer fun(self: omi.Patch, player: IsoPlayer, index: integer)? Function to run on player spawn, if the patch is enabled.
+---@field onFirstPlayerUpdate fun(self: omi.Patch, player: IsoPlayer)? Function to run on the first player update, if the patch is enabled.
+---@field onGameStart fun(self: omi.Patch)? Function to run on game start, if the patch is enabled.
+
+local allowlist = {} ---@type string[]
+local blocklist = {} ---@type string[]
+local cachedAllowStr ---@type string
+local cachedBlockStr ---@type string
+
+local trim = string.trim
+local split = string.split
 
 
 ---Checks whether a patch's dependencies are available.
@@ -39,57 +48,10 @@ local function checkPatchDependencies(patch)
     return true
 end
 
----Returns the configured allow and blocklists.
----@return string[]
----@return string[]
-local function getAllowBlockLists()
-    local allowlistStr = string.trim(SandboxVars.OmiPatch.Allowlist)
-    local blocklistStr = string.trim(SandboxVars.OmiPatch.Blocklist)
-
-    local allowlist
-    local blocklist
-
-    if #allowlistStr > 0 then
-        allowlist = string.split(allowlistStr, ';')
-    else
-        allowlist = {}
-    end
-
-    if #blocklistStr > 0 then
-        blocklist = string.split(blocklistStr, ';')
-    else
-        blocklist = {}
-    end
-
-    return allowlist, blocklist
-end
-
-
----Checks whether a patch is enabled by name.
----@param name string
----@return boolean
-function OmiPatch.isPatchEnabled(name)
-    local patch = OmiPatch.patches[name]
-    if not patch then
-        return false
-    end
-
-    local allowlist, blocklist = getAllowBlockLists()
-    return OmiPatch.shouldApplyPatch(patch, allowlist, blocklist)
-end
-
----Registers a new patch by name.
----@param patch omi.Patch
-function OmiPatch.registerPatch(patch)
-    OmiPatch.patches[patch.name] = patch
-end
-
 ---Checks whether a patch should be applied.
 ---@param patch omi.Patch
----@param allowlist table
----@param blocklist table
 ---@return boolean
-function OmiPatch.shouldApplyPatch(patch, allowlist, blocklist)
+local function shouldApplyPatch(patch)
     if #allowlist > 0 then
         local found = false
         for _, name in pairs(allowlist) do
@@ -113,33 +75,87 @@ function OmiPatch.shouldApplyPatch(patch, allowlist, blocklist)
     return checkPatchDependencies(patch)
 end
 
+---Updates the cached allow and block lists.
+local function updateAllowBlockLists()
+    local allowStr = trim(SandboxVars.OmiPatch.Allowlist)
+    local blockStr = trim(SandboxVars.OmiPatch.Blocklist)
+    if allowStr ~= cachedAllowStr then
+        if #allowStr > 0 then
+            allowlist = split(allowStr, ';')
+        else
+            allowlist = {}
+        end
+
+        cachedAllowStr = allowStr
+    end
+
+    if blockStr ~= cachedBlockStr then
+        if #blockStr > 0 then
+            blocklist = split(blockStr, ';')
+        else
+            blocklist = {}
+        end
+
+        cachedBlockStr = blockStr
+    end
+end
+
+---Applies enabled patches with a registered callback.
+---@param callback string The name of the patch function callback to trigger.
+---@param ... unknown Arguments for patch function callbacks.
+local function applyPatches(callback, ...)
+    updateAllowBlockLists()
+
+    for _, patch in pairs(OmiPatch.patches) do
+        local cb = patch[callback]
+        if cb and shouldApplyPatch(patch) then
+            cb(patch, ...)
+        end
+    end
+end
+
+
+---Checks whether a patch is enabled by name.
+---@param name string
+---@return boolean
+function OmiPatch.isPatchEnabled(name)
+    local patch = OmiPatch.patches[name]
+    if not patch then
+        return false
+    end
+
+    updateAllowBlockLists()
+    return shouldApplyPatch(patch)
+end
+
+---Registers a new patch.
+---@param patch omi.Patch
+function OmiPatch.registerPatch(patch)
+    OmiPatch.patches[patch.name] = patch
+end
+
 
 ---@protected
 function OmiPatch._onGameStart()
-    local allowlist, blocklist = getAllowBlockLists()
-
-    for _, patch in pairs(OmiPatch.patches) do
-        if patch.onGameStart and OmiPatch.shouldApplyPatch(patch, allowlist, blocklist) then
-            patch:onGameStart()
-        end
-    end
+    applyPatches('onGameStart')
 end
 
 ---@param index integer
 ---@param player IsoPlayer
 ---@protected
 function OmiPatch._onCreatePlayer(index, player)
-    local allowlist, blocklist = getAllowBlockLists()
+    applyPatches('onCreatePlayer', player, index)
+end
 
-    for _, patch in pairs(OmiPatch.patches) do
-        if patch.onCreatePlayer and OmiPatch.shouldApplyPatch(patch, allowlist, blocklist) then
-            patch:onCreatePlayer(player, index)
-        end
-    end
+---@param player IsoPlayer
+function OmiPatch._onFirstPlayerUpdate(player)
+    Events.OnPlayerUpdate.Remove(OmiPatch._onFirstPlayerUpdate)
+    applyPatches('onFirstPlayerUpdate', player)
 end
 
 
 Events.OnGameStart.Add(OmiPatch._onGameStart)
 Events.OnCreatePlayer.Add(OmiPatch._onCreatePlayer)
+Events.OnPlayerUpdate.Add(OmiPatch._onFirstPlayerUpdate)
 
 return OmiPatch
