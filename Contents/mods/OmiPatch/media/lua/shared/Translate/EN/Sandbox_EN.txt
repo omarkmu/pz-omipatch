@@ -1,0 +1,12 @@
+Sandbox_EN = {
+    Sandbox_OmiPatch = "Omi's Patches",
+
+    Sandbox_OPIgnorePatchDependencies = "Ignore Patch Dependencies",
+    Sandbox_OPIgnorePatchDependencies_tooltip = "If enabled, the mod will attempt to apply patches regardless of whether their dependencies are enabled.",
+
+    Sandbox_OPAllowlist = "Patch Allowlist",
+    Sandbox_OPAllowlist_tooltip = "If configured, only patches from this list will be enabled. Semicolon-separated.",
+
+    Sandbox_OPBlocklist = "Patch Blocklist",
+    Sandbox_OPBlocklist_tooltip = "If configured, patches from this list will not be enabled. Semicolon-separated.",
+}

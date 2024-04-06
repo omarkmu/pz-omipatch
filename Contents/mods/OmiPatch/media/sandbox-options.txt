@@ -1,0 +1,25 @@
+VERSION = 1,
+
+option OmiPatch.IgnorePatchDependencies
+{
+    type = boolean,
+    default = false,
+    page = OmiPatch,
+    translation = OPIgnorePatchDependencies,
+}
+
+option OmiPatch.Allowlist
+{
+    type = string,
+    default =,
+    page = OmiPatch,
+    translation = OPAllowlist,
+}
+
+option OmiPatch.Blocklist
+{
+    type = string,
+    default =,
+    page = OmiPatch,
+    translation = OPBlocklist,
+}

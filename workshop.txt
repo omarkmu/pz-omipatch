@@ -1,0 +1,17 @@
+version=1
+title=Omi's Patches
+description=This mod contains various small patches and fixes.
+description=Patches can be turned off individually, but every patch is enabled by default if the relevant mod is enabled.
+description=[h2]Features[/h2]
+description=Currently, the following patches are included:[list]
+description=[*]DebugTrashUI_Fix: Fixes a bugged function in [url=https://steamcommunity.com/sharedfiles/filedetails/?id=2868145886]Debug Trash UI[/url].
+description=[*]DebugTrashUI_NoFavorites: Prevents deletion of favorited items in Debug Trash UI. This has no effect unless DebugTrashUI_Fix is enabled.
+description=[*]Vanilla_NoAdminPowersOnStart: Disables admin powers on startup for admins.
+description=[/list]
+description=
+description=[h2]Permissions[/h2]
+description=This mod uses the [url=https://theindiestone.com/forums/index.php?/topic/2530-mod-permissions/#comment-36478]Ask for permission policy.[/url]
+description=
+description=The code and associated documentation is licensed under the [url=https://github.com/omarkmu/pz-omipatch/blob/main/LICENSE]MIT License.[/url]
+tags=Build 41;Interface;Multiplayer
+visibility=public
